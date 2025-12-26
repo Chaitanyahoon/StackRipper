@@ -1,0 +1,41 @@
+{
+    "manifest_version": 3,
+    "name": "StackRipper",
+    "version": "1.1",
+    "description": "Master tech detection with a warm, cozy aesthetic.",
+    "permissions": [
+        "storage",
+        "tabs",
+        "webRequest"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "scripts/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "scripts/content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "action": {
+        "default_popup": "ui/popup.html"
+    },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "data/rules.json"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,303 @@
+{
+  "technologies": [
+    {
+      "name": "HTML5",
+      "category": "Core Web",
+      "description": "The standard markup language for documents designed to be displayed in a web browser.",
+      "website": "https://developer.mozilla.org/en-US/docs/Web/HTML",
+      "patterns": {
+        "dom": [
+          "html"
+        ],
+        "scripts": [],
+        "headers": []
+      }
+    },
+    {
+      "name": "JavaScript",
+      "category": "Core Web",
+      "description": "The programming language that enables interactive web pages and is an essential part of web applications.",
+      "website": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      "patterns": {
+        "dom": [
+          "script"
+        ],
+        "scripts": [],
+        "headers": []
+      }
+    },
+    {
+      "name": "React",
+      "category": "Frontend",
+      "description": "A JavaScript library for building user interfaces, maintained by Meta.",
+      "website": "https://react.dev",
+      "patterns": {
+        "dom": [
+          "#root",
+          "#app",
+          "#container",
+          "[data-reactroot]",
+          "[data-reactid]"
+        ],
+        "scripts": [
+          "react-dom",
+          "react\\.development",
+          "react\\.production",
+          "fkvendor\\.js",
+          "DesktopComponents\\.js"
+        ],
+        "headers": []
+      }
+    },
+    {
+      "name": "Next.js",
+      "category": "Frontend",
+      "description": "The React Framework for the Web, providing SSR and static generation.",
+      "website": "https://nextjs.org",
+      "patterns": {
+        "dom": [
+          "#__next",
+          "script[src*='_next/static']"
+        ],
+        "scripts": [
+          "/_next/static/"
+        ],
+        "headers": [
+          "X-Nextjs-Cache",
+          "X-Vercel-Cache"
+        ]
+      }
+    },
+    {
+      "name": "Vue.js",
+      "category": "Frontend",
+      "description": "The Progressive JavaScript Framework for building modern web interfaces.",
+      "website": "https://vuejs.org",
+      "patterns": {
+        "dom": [
+          "[data-v-]",
+          "#app"
+        ],
+        "scripts": [
+          "vue\\.js",
+          "vue\\.min\\.js",
+          "vue@"
+        ],
+        "headers": []
+      }
+    },
+    {
+      "name": "Angular",
+      "category": "Frontend",
+      "description": "A platform for building mobile and desktop web applications, maintained by Google.",
+      "website": "https://angular.io",
+      "patterns": {
+        "dom": [
+          "[ng-version]",
+          "[ng-app]",
+          "app-root",
+          "script[id*='angular']"
+        ],
+        "scripts": [
+          "angular\\.js",
+          "angular\\.min\\.js",
+          "zone\\.js",
+          "bundles/angular",
+          "@angular"
+        ],
+        "headers": []
+      }
+    },
+    {
+      "name": "Flipkart",
+      "category": "E-commerce",
+      "description": "Custom high-performance e-commerce architecture used by Flipkart.",
+      "website": "https://flipkart.com",
+      "patterns": {
+        "dom": [
+          "link[href*='flixcart.com']",
+          "#container"
+        ],
+        "scripts": [
+          "flixcart\\.com",
+          "flixcart\\.net"
+        ],
+        "headers": []
+      }
+    },
+    {
+      "name": ".NET",
+      "category": "Backend",
+      "description": "A free, cross-platform, open source developer platform for building many different types of applications.",
+      "website": "https://dotnet.microsoft.com",
+      "patterns": {
+        "dom": [
+          "__VIEWSTATE",
+          "__EVENTVALIDATION"
+        ],
+        "scripts": [],
+        "headers": [
+          "x-powered-by: ASP.NET",
+          "server: Microsoft-IIS"
+        ]
+      }
+    },
+    {
+      "name": "Node.js",
+      "category": "Backend",
+      "description": "An open-source, cross-platform JavaScript runtime environment.",
+      "website": "https://nodejs.org",
+      "patterns": {
+        "dom": [],
+        "scripts": [],
+        "headers": [
+          "x-powered-by: express",
+          "x-powered-by: nodejs"
+        ]
+      }
+    },
+    {
+      "name": "PHP",
+      "category": "Backend",
+      "description": "A popular general-purpose scripting language that is especially suited to web development.",
+      "website": "https://php.net",
+      "patterns": {
+        "dom": [],
+        "scripts": [],
+        "headers": [
+          "x-powered-by: PHP"
+        ]
+      }
+    },
+    {
+      "name": "WordPress",
+      "category": "CMS",
+      "description": "The world's most popular tool for building websites and blogs.",
+      "website": "https://wordpress.org",
+      "patterns": {
+        "dom": [
+          "meta[name*='generator'][content*='WordPress']",
+          "link[href*='wp-content']"
+        ],
+        "scripts": [
+          "wp-embed\\.min\\.js"
+        ],
+        "headers": [
+          "X-Pingback"
+        ]
+      }
+    },
+    {
+      "name": "Shopify",
+      "category": "CMS",
+      "description": "A complete commerce platform that lets anyone start, grow, and manage a business.",
+      "website": "https://shopify.com",
+      "patterns": {
+        "dom": [
+          "link[href*='cdn.shopify.com']"
+        ],
+        "scripts": [
+          "shopify\\.com",
+          "cdn\\.shopify\\.com"
+        ],
+        "headers": [
+          "X-ShopId"
+        ]
+      }
+    },
+    {
+      "name": "Cloudflare",
+      "category": "Hosting / CDN",
+      "description": "Web performance and security company providing CDN and DDoS protection.",
+      "website": "https://cloudflare.com",
+      "patterns": {
+        "dom": [],
+        "scripts": [],
+        "headers": [
+          "cf-ray",
+          "cf-cache-status",
+          "server: cloudflare"
+        ]
+      }
+    },
+    {
+      "name": "Vercel",
+      "category": "Hosting / CDN",
+      "description": "The platform for frontend developers, providing the speed and reliability of a global CDN.",
+      "website": "https://vercel.com",
+      "patterns": {
+        "dom": [],
+        "scripts": [],
+        "headers": [
+          "x-vercel-id",
+          "x-vercel-cache"
+        ]
+      }
+    },
+    {
+      "name": "Tailwind CSS",
+      "category": "UI Libraries",
+      "description": "A utility-first CSS framework for rapidly building custom designs.",
+      "website": "https://tailwindcss.com",
+      "patterns": {
+        "dom": [
+          ".\\[",
+          ".sm\\:",
+          ".md\\:",
+          ".lg\\:"
+        ],
+        "scripts": [],
+        "headers": []
+      }
+    },
+    {
+      "name": "Bootstrap",
+      "category": "UI Libraries",
+      "description": "Powerful, extensible, and feature-packed frontend toolkit.",
+      "website": "https://getbootstrap.com",
+      "patterns": {
+        "dom": [
+          "link[href*='bootstrap']",
+          ".container-fluid",
+          ".row"
+        ],
+        "scripts": [
+          "bootstrap\\.min\\.js",
+          "bootstrap\\.bundle\\.js"
+        ],
+        "headers": []
+      }
+    },
+    {
+      "name": "Google Analytics",
+      "category": "Analytics",
+      "description": "A web analytics service offered by Google that tracks and reports website traffic.",
+      "website": "https://analytics.google.com",
+      "patterns": {
+        "dom": [],
+        "scripts": [
+          "google-analytics\\.com/analytics\\.js",
+          "googletagmanager\\.com/gtag/js"
+        ],
+        "headers": []
+      }
+    },
+    {
+      "name": "New Relic",
+      "category": "Analytics",
+      "description": "Software for monitoring and managing the performance of applications.",
+      "website": "https://newrelic.com",
+      "patterns": {
+        "dom": [],
+        "scripts": [
+          "nr-runtime",
+          "newrelic",
+          "NREUM"
+        ],
+        "headers": [
+          "x-newrelic-id"
+        ]
+      }
+    }
+  ]
+}

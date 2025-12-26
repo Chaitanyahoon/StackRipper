@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StackRipper</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        StackRipper
+      </div>
+      <div class="status-bar">
+        <span id="tab-url">visiting...</span>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <div id="results-container">
+        <div class="loading">
+          <div class="loader-orbit"></div>
+          <p>Gathering fragments...</p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="stats">
+        <span id="tech-count" style="color: var(--accent-primary); font-size: 0.8rem;">0</span> TECHS DETECTED
+      </div>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+
+</html>
