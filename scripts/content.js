@@ -14,21 +14,15 @@ async function scan() {
             if (tech.patterns.dom && tech.patterns.dom.length > 0) {
                 tech.patterns.dom.forEach(selector => {
                     try {
-                        // Check for HTML and JS manually or via matching
                         if (selector === 'html' || selector === 'script') {
-                            if (document.querySelector(selector)) detections.push(tech.name);
+                            if (document.querySelector(selector)) detections.push({ name: tech.name, method: 'DOM' });
                             return;
                         }
 
                         if (document.querySelector(selector)) {
-                            detections.push(tech.name);
+                            detections.push({ name: tech.name, method: 'DOM' });
                         }
-                    } catch (e) {
-                        if (selector.startsWith('.')) {
-                            const elements = document.querySelectorAll(selector);
-                            if (elements.length > 0) detections.push(tech.name);
-                        }
-                    }
+                    } catch (e) { }
                 });
             }
 
@@ -38,19 +32,24 @@ async function scan() {
                 tech.patterns.scripts.forEach(pattern => {
                     const regex = new RegExp(pattern, 'i');
                     if (pageScripts.some(src => regex.test(src))) {
-                        detections.push(tech.name);
+                        detections.push({ name: tech.name, method: 'Script' });
                     }
                 });
             }
         });
 
-        // Unique detections
-        const uniqueDetections = [...new Set(detections)];
+        // Unique detections by name (keep first method found)
+        const uniqueDetectionsMap = new Map();
+        detections.forEach(d => {
+            if (!uniqueDetectionsMap.has(d.name)) {
+                uniqueDetectionsMap.set(d.name, d.method);
+            }
+        });
 
-        if (uniqueDetections.length > 0) {
+        if (uniqueDetectionsMap.size > 0) {
             chrome.runtime.sendMessage({
                 type: 'DETECTIONS',
-                detections: uniqueDetections
+                detections: Array.from(uniqueDetectionsMap.entries()).map(([name, method]) => ({ name, method }))
             });
         }
     } catch (err) {
@@ -58,8 +57,61 @@ async function scan() {
     }
 }
 
-// Perform multiple scans to catch dynamic content
-scan(); // Immediate
-setTimeout(scan, 1000); // 1s
-setTimeout(scan, 3000); // 3s
-setTimeout(scan, 6000); // 6s
+// Version Detector Injection
+function injectVersionDetector() {
+    const script = document.createElement('script');
+    script.textContent = `
+        (function() {
+            const versions = {};
+            try {
+                if (window.React) versions['React'] = window.React.version;
+                if (window.next) versions['Next.js'] = window.next.version;
+                if (window.angular) versions['Angular'] = window.angular.version ? window.angular.version.full : 'detected';
+                if (window.Vue) versions['Vue.js'] = window.Vue.version;
+                if (window.jQuery) versions['jQuery'] = window.jQuery.fn.jquery;
+                
+                window.postMessage({ type: 'STACKRIPPER_VERSIONS', versions }, '*');
+            } catch(e) {}
+        })();
+    `;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
+}
+
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'STACKRIPPER_VERSIONS') {
+        chrome.runtime.sendMessage({
+            type: 'VERSIONS_UPDATE',
+            versions: event.data.versions
+        });
+    }
+});
+
+// Performance Metrics
+function capturePerformance() {
+    const timing = performance.getEntriesByType('navigation')[0];
+    if (!timing) return;
+
+    const metrics = {
+        loadTime: Math.round(timing.loadEventEnd),
+        domReady: Math.round(timing.domContentLoadedEventEnd),
+        responseTime: Math.round(timing.responseEnd - timing.requestStart)
+    };
+
+    // Only send if values are positive (page fully loaded)
+    if (metrics.loadTime > 0) {
+        chrome.runtime.sendMessage({ type: 'PERFORMANCE_METRICS', metrics });
+    }
+}
+
+// Initial Scan & Injection
+scan();
+injectVersionDetector();
+
+// Delayed Scans
+setTimeout(scan, 1000);
+setTimeout(scan, 3000);
+setTimeout(() => {
+    scan();
+    capturePerformance();
+}, 6000);

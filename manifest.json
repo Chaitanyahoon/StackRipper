@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
     "name": "StackRipper",
-    "version": "1.1",
-    "description": "Master tech detection with a warm, cozy aesthetic.",
+    "version": "2.0",
+    "description": "Professional technology profiler with deep stack analysis and performance metrics.",
     "permissions": [
         "storage",
         "tabs",

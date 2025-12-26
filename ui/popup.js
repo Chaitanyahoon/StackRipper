@@ -2,8 +2,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resultsContainer = document.getElementById('results-container');
     const techCountEl = document.getElementById('tech-count');
     const tabUrlEl = document.getElementById('tab-url');
+    const exportBtn = document.getElementById('export-json');
 
     let rulesData = [];
+    let currentData = null;
 
     // Load rules metadata
     try {
@@ -16,13 +18,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // MOCK FOR PREVIEW
     if (!window.chrome || !chrome.runtime || !chrome.runtime.sendMessage) {
-        tabUrlEl.textContent = 'stackripper.demo';
-        renderDetections([
-            { name: 'React', category: 'Frontend' },
-            { name: 'Next.js', category: 'Frontend' },
-            { name: 'Cloudflare', category: 'Hosting / CDN' },
-            { name: 'Flipkart', category: 'E-commerce' }
-        ]);
+        tabUrlEl.textContent = 'stackripper.pro';
+        renderDetections({
+            detections: [
+                { name: 'React', category: 'Frontend', method: 'Script' },
+                { name: 'Next.js', category: 'Frontend', method: 'DOM' },
+                { name: 'Cloudflare', category: 'Hosting / CDN', method: 'Header' }
+            ],
+            versions: { 'React': '18.2.0', 'Next.js': '14.0.1' },
+            metrics: { loadTime: 450, responseTime: 82, domReady: 310 }
+        });
         return;
     }
 
@@ -37,20 +42,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!response || !response.detections || response.detections.length === 0) {
             renderEmptyState();
         } else {
-            renderDetections(response.detections);
+            currentData = response;
+            renderDetections(response);
         }
     });
 
-    function renderDetections(detections) {
+    function renderDetections(data) {
+        const { detections, versions, metrics } = data;
         resultsContainer.innerHTML = '';
         techCountEl.textContent = detections.length;
 
-        // Add Site Profile (Summary)
+        // Add Site Profile
         const profile = generateProfile(detections);
         const profileDiv = document.createElement('div');
         profileDiv.className = 'site-profile';
+
+        const perfHtml = metrics && metrics.responseTime ?
+            `<span class="performance-pill" title="TTFB (Time to First Byte)">TTFB: ${metrics.responseTime}ms</span>` : '';
+
         profileDiv.innerHTML = `
-            <div class="profile-label">SITE IDENTITY PROFILE</div>
+            <div class="profile-label">
+                SITE IDENTITY PROFILE
+                ${perfHtml}
+            </div>
             <div class="profile-summary">${profile}</div>
         `;
         resultsContainer.appendChild(profileDiv);
@@ -78,13 +92,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             categories[category].forEach(tech => {
                 const techMeta = rulesData.find(r => r.name === tech.name) || {};
+                const version = versions ? versions[tech.name] : null;
+
                 const card = document.createElement('div');
                 card.className = 'tech-card';
 
                 card.innerHTML = `
-                    <div class="tech-name">${tech.name}</div>
-                    <div class="tech-desc">${techMeta.description || 'Professional technology implementation detected.'}</div>
-                    ${techMeta.website ? `<a href="${techMeta.website}" target="_blank" class="tech-docs">Documentation →</a>` : ''}
+                    <div class="tech-name-row">
+                        <div class="tech-name">${tech.name}</div>
+                        ${version ? `<div class="tech-version">v${version}</div>` : ''}
+                    </div>
+                    <div class="tech-desc">${techMeta.description || 'Enterprise technology detected.'}</div>
+                    <div class="tech-meta-row">
+                        <div class="tech-method">Via ${tech.method || 'Unknown'}</div>
+                        ${techMeta.website ? `<a href="${techMeta.website}" target="_blank" class="tech-docs">Documentation</a>` : ''}
+                    </div>
                 `;
                 list.appendChild(card);
             });
@@ -96,20 +118,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function generateProfile(detections) {
         const names = detections.map(d => d.name);
-        if (names.includes('Flipkart')) return "High-performance custom e-commerce architecture. Optimized for the Indian market with a heavy React-based stack and deep analytics integration.";
-        if (names.includes('Next.js')) return "Modern React-based delivery system. Utilizing server-side rendering and edge distribution for premium performance and SEO integrity.";
-        if (names.includes('React')) return "Interactive component architecture. Focused on a rich user experience with efficient state management and modular design.";
-        if (names.includes('.NET')) return "Robust enterprise backend framework. Built for reliability, high-concurrency, and secure professional applications.";
-        return "Specialized technology stack identified. The system utilizes industry-standard tools for reliable performance and scalability.";
+        if (names.includes('Flipkart')) return "Comprehensive e-commerce ecosystem. Optimized for high-concurrency and deep user engagement with a modular React infrastructure.";
+        if (names.includes('Next.js')) return "Modern full-stack React implementation. Leverages edge computing and server-side generation for elite performance and technical SEO.";
+        if (names.includes('React')) return "Dynamic frontend architecture. Built on component-driven principles for a reactive and fast user experience.";
+        return "Specialized professional stack detected. System is architected for scalability using industry-standard enterprise frameworks.";
     }
 
     function renderEmptyState() {
         resultsContainer.innerHTML = `
-            <div class="loading">
-                <p style="color: #b0a098; font-weight: 500;">No magic detected yet</p>
+            <div class="loading" style="animation: none;">
+                <p style="color: var(--text-secondary); font-weight: 500;">No technologies detected</p>
                 <p style="font-size: 0.7rem; margin-top: 10px; opacity: 0.6;">Try refreshing the page to scan again</p>
             </div>
         `;
         techCountEl.textContent = '0';
     }
+
+    // Export Logic
+    exportBtn.addEventListener('click', () => {
+        if (!currentData) return;
+        const report = {
+            hostname: tabUrlEl.textContent,
+            timestamp: new Date().toISOString(),
+            stack: currentData.detections,
+            versions: currentData.versions,
+            performance: currentData.metrics
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `stackripper_${tabUrlEl.textContent.replace(/\./g, '_')}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    });
 });
