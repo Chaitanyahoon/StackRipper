@@ -4,7 +4,7 @@
 
 StackRipper is a high-performance Chrome extension designed for developers, security researchers, and tech enthusiasts. It goes beyond simple detection, providing deep architectural insights, version tracking, and performance metrics—all wrapped in a premium, adaptive 'Peach & White' aesthetic.
 
-![StackRipper Demo](ui/demo.webp)
+
 
 ---
 
@@ -85,4 +85,4 @@ StackRipper is designed to be extensible. To add new technologies:
 
 MIT License - Feel free to use, rip, and rebuild.
 
-Developed with 🥂 by **Chaitanyahoon**
+Developed by **Chaitanyahoon**
