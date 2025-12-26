@@ -4,7 +4,32 @@
 
 StackRipper is a high-performance Chrome extension designed for developers, security researchers, and tech enthusiasts. It goes beyond simple detection, providing deep architectural insights, version tracking, and performance metrics—all wrapped in a premium, adaptive 'Peach & White' aesthetic.
 
-![StackRipper Banner](https://raw.githubusercontent.com/Chaitanyahoon/StackRipper/main/ui/logo-placeholder.png) *(Preview via Extension)*
+![StackRipper Demo](ui/demo.webp)
+
+---
+
+## 🚀 Quick Install (No Store Required)
+
+Since this is an independent professional tool, you can install it for free in 30 seconds:
+
+### Method A: Download the ZIP (Easiest)
+1.  **Download** the latest `StackRipper_v2.0_Stable.zip` from our [Releases](https://github.com/Chaitanyahoon/StackRipper/releases) page.
+2.  **Extract** the ZIP folder anywhere on your PC.
+3.  **Open Extensions**: Go to `chrome://extensions/` in Chrome.
+4.  **Enable Developer Mode**: Toggle the switch in the top-right.
+5.  **Load Unpacked**: Click the button and select the extracted folder.
+
+### Method B: Clone for Developers
+```bash
+git clone https://github.com/Chaitanyahoon/StackRipper.git
+```
+Then follow steps 3-5 above.
+
+---
+
+## 🦊 Firefox & Edge Support
+*   **Edge**: Fully compatible. Follow the Chrome "Load Unpacked" steps.
+*   **Firefox**: We are 95% compatible with the WebExtensions API. You can load this via `about:debugging` for free!
 
 ---
 
@@ -17,23 +42,6 @@ StackRipper is a high-performance Chrome extension designed for developers, secu
 *   **🌓 Adaptive Theming**: Automatically switches between **Premium Light** and **Deep Space Dark** modes based on your system theme.
 *   **📊 JSON Reporting**: Export full technical analysis reports with a single click for documentation or auditing.
 *   **🏷️ Icon Badge**: Instant real-time feedback with technology counts displayed directly on the extension icon.
-
----
-
-## 🚀 Installation
-
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/Chaitanyahoon/StackRipper.git
-    ```
-2.  **Open Chrome Extensions**:
-    Navigate to `chrome://extensions/` in your browser.
-3.  **Enable Developer Mode**:
-    Toggle the switch in the top-right corner.
-4.  **Load Unpacked**:
-    Click the **"Load unpacked"** button and select the `StackRipper` root folder.
-5.  **Start Ripping**:
-    Visit any site and click the StackRipper icon to see the magic.
 
 ---
 
