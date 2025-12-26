@@ -1,4 +1,4 @@
-# 🧸 StackRipper v2.0
+# <img src="assets/icon48.png" width="32" vertical-align="middle"> StackRipper v2.0
 
 **Professional Technology Profiler & Stack Analysis Tool**
 
