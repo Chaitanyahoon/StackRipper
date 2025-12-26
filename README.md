@@ -1,43 +1,80 @@
-# StackRipper 🚀
+# 🧸 StackRipper v2.0
 
-Master tech detection with a warm, cozy aesthetic. StackRipper detects frontend frameworks, backend technologies, CMS, hosting providers, and more with a friendly and clean interface.
+**Professional Technology Profiler & Stack Analysis Tool**
 
-## Features
-- **Fast Detection**: Uses content scripts and background header scanning.
-- **Cozy UI**: Warm-themed, soft interface for a pleasant developer experience.
-- **Accurate Rules**: Fingerprint-based detection for popular technologies.
-- **Expandable**: Easily add new detection rules in `data/rules.json`.
+StackRipper is a high-performance Chrome extension designed for developers, security researchers, and tech enthusiasts. It goes beyond simple detection, providing deep architectural insights, version tracking, and performance metrics—all wrapped in a premium, adaptive 'Peach & White' aesthetic.
 
-## Installation Instructions
+![StackRipper Banner](https://raw.githubusercontent.com/Chaitanyahoon/StackRipper/main/ui/logo-placeholder.png) *(Preview via Extension)*
 
-1. **Clone/Download** this repository to your local machine.
-2. Open **Google Chrome**.
-3. Navigate to `chrome://extensions/`.
-4. Enable **Developer mode** (toggle switch in the top right).
-5. Click **Load unpacked**.
-6. Select the `StackRipper` folder.
+---
 
-## How to use
-- Visit any website (e.g., [react.js](https://react.dev), [wordpress.org](https://wordpress.org)).
-- Click the **StackRipper** icon in your extension bar.
-- See the tech stack reveal itself with a sleek animation.
+## ✨ Features
 
-## Tech Stack
-- Manifest V3
-- JavaScript (Service Worker + Content Scripts)
-- CSS (Custom Cyberpunk Theme)
-- Chrome Storage & WebRequest APIs
+*   **🔍 Elite Detection Engine**: Rule-based scanning of DOM fragments, script signatures, and network response headers.
+*   **📦 Deep Version Tracking**: Identifies specific versions of frameworks like React, Next.js, Angular, and Vue.js.
+*   **⚡ Performance Intelligence**: Real-time monitoring of site performance (TTFB, Load Time, and DOM Ready).
+*   **📋 Site Identity Profile**: Generates a professional technical summary of the visited site's architecture.
+*   **🌓 Adaptive Theming**: Automatically switches between **Premium Light** and **Deep Space Dark** modes based on your system theme.
+*   **📊 JSON Reporting**: Export full technical analysis reports with a single click for documentation or auditing.
+*   **🏷️ Icon Badge**: Instant real-time feedback with technology counts displayed directly on the extension icon.
 
-## Adding New Rules
-Open `data/rules.json` and add a new entry to the `technologies` array:
-```json
-{
-  "name": "MyTech",
-  "category": "Frontend",
-  "patterns": {
-    "dom": ["#my-tech-id"],
-    "scripts": ["my-tech\\.js"],
-    "headers": ["X-My-Tech-Header"]
-  }
-}
+---
+
+## 🚀 Installation
+
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/Chaitanyahoon/StackRipper.git
+    ```
+2.  **Open Chrome Extensions**:
+    Navigate to `chrome://extensions/` in your browser.
+3.  **Enable Developer Mode**:
+    Toggle the switch in the top-right corner.
+4.  **Load Unpacked**:
+    Click the **"Load unpacked"** button and select the `StackRipper` root folder.
+5.  **Start Ripping**:
+    Visit any site and click the StackRipper icon to see the magic.
+
+---
+
+## 🛠️ Technology Stack
+
+*   **Manifest V3**: Built on the latest, most secure extension standard.
+*   **Service Workers**: Background scanning for network-level detections.
+*   **Content Injection**: Secure sandboxed script injection for version detection.
+*   **Vanilla JS & CSS**: Maximum performance with zero external dependencies.
+
+---
+
+## 📂 Project Structure
+
+```text
+StackRipper/
+├── data/
+│   └── rules.json      # The dynamic brain (Detection rules & metadata)
+├── scripts/
+│   ├── background.js   # Network monitoring & Badge management
+│   └── content.js      # DOM scanning & version injection
+├── ui/
+│   ├── popup.html      # The high-impact dashboard
+│   ├── popup.css       # Adaptive themes & Professional styles
+│   └── popup.js        # Data orchestration & Export logic
+└── manifest.json       # Extension configuration (v2.0)
 ```
+
+---
+
+## 🤝 Contributing
+
+StackRipper is designed to be extensible. To add new technologies:
+1.  Open `data/rules.json`.
+2.  Add a new entry with `dom`, `scripts`, or `headers` patterns.
+3.  Reload the extension.
+
+---
+
+## 📜 License
+
+MIT License - Feel free to use, rip, and rebuild.
+
+Developed with 🥂 by **Chaitanyahoon**
