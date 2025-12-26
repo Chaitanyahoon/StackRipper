@@ -54,12 +54,25 @@ header {
   z-index: 10;
 }
 
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.header-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
 .logo {
   font-weight: 800;
   font-size: 1.4rem;
   color: var(--accent-color);
   letter-spacing: -0.5px;
-  margin-bottom: 6px;
 }
 
 .status-bar {

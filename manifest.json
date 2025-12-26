@@ -3,6 +3,11 @@
     "name": "StackRipper",
     "version": "2.0",
     "description": "Professional technology profiler with deep stack analysis and performance metrics.",
+    "icons": {
+        "16": "assets/icon16.png",
+        "48": "assets/icon48.png",
+        "128": "assets/icon128.png"
+    },
     "permissions": [
         "storage",
         "tabs",
