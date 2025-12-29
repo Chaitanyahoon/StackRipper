@@ -5,10 +5,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const exportBtn = document.getElementById('export-json');
     const aiConsultBtn = document.getElementById('ai-consultor');
 
-    // API CONFIGURATION
-    const GEMINI_API_KEY = "AIzaSyC5qvhkt0ro9XJuiDCedg0ea2Owqc1kqTk";
-    const GEMINI_MODEL = "gemini-1.5-flash"; // Fast and efficient
-
     let rulesData = [];
     let currentData = null;
 
@@ -21,18 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         rulesData = [];
     }
 
-    // MOCK FOR PREVIEW
+    // Check for Chrome Extension environment
     if (!window.chrome || !chrome.runtime || !chrome.runtime.sendMessage) {
-        tabUrlEl.textContent = 'stackripper.pro';
-        renderDetections({
-            detections: [
-                { name: 'React', category: 'Frontend', method: 'Script' },
-                { name: 'Next.js', category: 'Frontend', method: 'DOM' },
-                { name: 'Cloudflare', category: 'Hosting / CDN', method: 'Header' }
-            ],
-            versions: { 'React': '18.2.0', 'Next.js': '14.0.1' },
-            metrics: { loadTime: 450, responseTime: 82, domReady: 310 }
-        });
+        renderEmptyState("Environment not supported. Please run as a Chrome Extension.");
         return;
     }
 
@@ -124,65 +111,95 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function generateProfile(detections) {
         const names = detections.map(d => d.name);
-        if (names.includes('Flipkart')) return "Comprehensive e-commerce ecosystem. Optimized for high-concurrency and deep user engagement with a modular React infrastructure.";
+        if (names.includes('Flipkart Stack')) return "Comprehensive e-commerce ecosystem. Optimized for high-concurrency and deep user engagement with a modular React infrastructure.";
         if (names.includes('Next.js')) return "Modern full-stack React implementation. Leverages edge computing and server-side generation for elite performance and technical SEO.";
         if (names.includes('React')) return "Dynamic frontend architecture. Built on component-driven principles for a reactive and fast user experience.";
         return "Specialized professional stack detected. System is architected for scalability using industry-standard enterprise frameworks.";
     }
 
-    function renderEmptyState() {
+    function renderEmptyState(customMsg) {
         resultsContainer.innerHTML = `
             <div class="loading" style="animation: none;">
-                <p style="color: var(--text-secondary); font-weight: 500;">No technologies detected</p>
+                <p style="color: var(--text-secondary); font-weight: 500;">${customMsg || 'No technologies detected'}</p>
                 <p style="font-size: 0.7rem; margin-top: 10px; opacity: 0.6;">Try refreshing the page to scan again</p>
             </div>
         `;
         techCountEl.textContent = '0';
     }
 
-    // --- AI LOGIC ---
+    // --- AI LOGIC (PRODUCTION READY - NO HARDCODED KEYS) ---
     aiConsultBtn.addEventListener('click', async () => {
         if (!currentData || !currentData.detections.length) return;
 
         const adviceContainer = document.getElementById('ai-advice-container');
         if (!adviceContainer) return;
 
-        adviceContainer.innerHTML = `<div class="ai-advice-box"><span class="ai-loading"></span>Analysing stack architecture...</div>`;
+        // Check storage for API Key first
+        chrome.storage.local.get(['gemini_api_key'], async (settings) => {
+            const apiKey = settings.gemini_api_key;
 
-        const techList = currentData.detections.map(d => d.name).sort().join(', ');
-        const cacheKey = `ai_review_${techList}`;
-
-        // 1. Check Cache
-        chrome.storage.local.get(cacheKey, async (result) => {
-            if (result[cacheKey]) {
-                adviceContainer.innerHTML = `<div class="ai-advice-box">${result[cacheKey]}</div>`;
+            if (!apiKey) {
+                adviceContainer.innerHTML = `
+                    <div class="ai-advice-box">
+                        <p style="margin-bottom:8px">Please set your Gemini AI API Key in settings to use the Consultant.</p>
+                        <input type="password" id="api-key-input" placeholder="Enter API Key" style="width:100%; padding:4px; border-radius:4px; border:1px solid var(--accent-color); margin-bottom:8px;">
+                        <button id="save-api-key" style="background:var(--accent-color); color:white; border:none; border-radius:4px; padding:4px 12px; cursor:pointer;">Save Key</button>
+                    </div>
+                `;
+                document.getElementById('save-api-key').addEventListener('click', () => {
+                    const newKey = document.getElementById('api-key-input').value;
+                    if (newKey) {
+                        chrome.storage.local.set({ gemini_api_key: newKey }, () => {
+                            aiConsultBtn.click(); // Re-trigger
+                        });
+                    }
+                });
                 return;
             }
 
-            // 2. Call API
-            try {
-                const prompt = `You are a Senior Tech Architect. Analyze this tech stack: [${techList}]. Provide a 2-sentence professional critique on performance, security, or modern best practices. Be concise and insightful.`;
+            adviceContainer.innerHTML = `<div class="ai-advice-box"><span class="ai-loading"></span>Analysing stack architecture...</div>`;
 
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
+            const techList = currentData.detections.map(d => d.name).sort().join(', ');
+            const cacheKey = `ai_review_${techList}`;
 
-                const data = await response.json();
-                const advice = data.candidates?.[0]?.content?.parts?.[0]?.text || "Architecture looks solid.";
+            // 1. Check Cache
+            chrome.storage.local.get(cacheKey, async (result) => {
+                if (result[cacheKey]) {
+                    adviceContainer.innerHTML = `<div class="ai-advice-box">${result[cacheKey]}</div>`;
+                    return;
+                }
 
-                // 3. Cache Result
-                const cacheData = {};
-                cacheData[cacheKey] = advice;
-                chrome.storage.local.set(cacheData);
+                // 2. Call API
+                try {
+                    const prompt = `You are a Senior Tech Architect. Analyze this tech stack: [${techList}]. Provide a 2-sentence professional critique on performance, security, or modern best practices. Be concise and insightful.`;
 
-                adviceContainer.innerHTML = `<div class="ai-advice-box">${advice}</div>`;
-            } catch (err) {
-                adviceContainer.innerHTML = `<div class="ai-advice-box" style="color:red;">AI Analysis Failed: ${err.message}</div>`;
-            }
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }]
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error.message);
+
+                    const advice = data.candidates?.[0]?.content?.parts?.[0]?.text || "Architecture looks solid.";
+
+                    // 3. Cache Result
+                    const cacheData = {};
+                    cacheData[cacheKey] = advice;
+                    chrome.storage.local.set(cacheData);
+
+                    adviceContainer.innerHTML = `<div class="ai-advice-box">${advice}</div>`;
+                } catch (err) {
+                    adviceContainer.innerHTML = `<div class="ai-advice-box" style="color:#ff6b6b;">AI Analysis Failed: ${err.message}</div>`;
+                    // If unauthorized, clear key
+                    if (err.message.includes('API key')) {
+                        chrome.storage.local.remove('gemini_api_key');
+                    }
+                }
+            });
         });
     });
 

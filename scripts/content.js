@@ -28,11 +28,19 @@ async function scan() {
 
             // 2. Scan Scripts
             if (tech.patterns.scripts && tech.patterns.scripts.length > 0) {
-                const pageScripts = Array.from(document.querySelectorAll('script')).map(s => s.src);
+                const scripts = Array.from(document.querySelectorAll('script'));
+                const pageScripts = scripts.map(s => s.src).filter(Boolean);
+                const inlineScripts = scripts.map(s => s.textContent).filter(Boolean);
+
                 tech.patterns.scripts.forEach(pattern => {
                     const regex = new RegExp(pattern, 'i');
+                    // Check external scripts
                     if (pageScripts.some(src => regex.test(src))) {
                         detections.push({ name: tech.name, method: 'Script' });
+                    }
+                    // Check inline scripts for bundle signatures
+                    if (inlineScripts.some(text => regex.test(text))) {
+                        detections.push({ name: tech.name, method: 'Inline' });
                     }
                 });
             }
@@ -62,16 +70,22 @@ function injectVersionDetector() {
     const script = document.createElement('script');
     script.textContent = `
         (function() {
-            const versions = {};
-            try {
-                if (window.React) versions['React'] = window.React.version;
-                if (window.next) versions['Next.js'] = window.next.version;
-                if (window.angular) versions['Angular'] = window.angular.version ? window.angular.version.full : 'detected';
-                if (window.Vue) versions['Vue.js'] = window.Vue.version;
-                if (window.jQuery) versions['jQuery'] = window.jQuery.fn.jquery;
-                
-                window.postMessage({ type: 'STACKRIPPER_VERSIONS', versions }, '*');
-            } catch(e) {}
+            function detect() {
+                const versions = {};
+                try {
+                    if (window.React) versions['React'] = window.React.version;
+                    if (window.next) versions['Next.js'] = window.next.version;
+                    if (window.angular) versions['Angular'] = window.angular.version ? window.angular.version.full : 'detected';
+                    if (window.Vue) versions['Vue.js'] = window.Vue.version;
+                    if (window.jQuery) versions['jQuery'] = window.jQuery.fn.jquery;
+                    
+                    window.postMessage({ type: 'STACKRIPPER_VERSIONS', versions }, '*');
+                } catch(e) {}
+            }
+            detect();
+            // Re-detect on dynamic changes
+            const observer = new MutationObserver(detect);
+            observer.observe(document.documentElement, { childList: true, subtree: true });
         })();
     `;
     (document.head || document.documentElement).appendChild(script);
@@ -108,10 +122,16 @@ function capturePerformance() {
 scan();
 injectVersionDetector();
 
-// Delayed Scans
-setTimeout(scan, 1000);
-setTimeout(scan, 3000);
+// High-frequency polling for first 10 seconds for dynamic apps
+let scanCount = 0;
+const scanInterval = setInterval(() => {
+    scan();
+    scanCount++;
+    if (scanCount >= 10) clearInterval(scanInterval);
+}, 1000);
+
+// Final capture
 setTimeout(() => {
     scan();
     capturePerformance();
-}, 6000);
+}, 12000);
