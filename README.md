@@ -2,6 +2,8 @@
 
 **Professional Technology Profiler & Stack Analysis Tool**
 
+[🌐 Visit the Official Website](https://stackripper.vercel.app)
+
 StackRipper is a high-performance Chrome extension designed for developers, security researchers, and tech enthusiasts. It goes beyond simple detection, providing deep architectural insights, version tracking, and performance metrics—all wrapped in a premium, adaptive 'Peach & White' aesthetic.
 
 
