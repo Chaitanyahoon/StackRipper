@@ -251,6 +251,65 @@ footer {
   opacity: 0.8;
 }
 
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: linear-gradient(135deg, #fff0eb, #ffe4e1);
+  border: 1px solid var(--accent-color);
+  border-radius: 6px;
+  width: 30px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(255, 183, 178, 0.4);
+}
+
+.ai-advice-box {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: linear-gradient(to right bottom, rgba(255, 183, 178, 0.1), rgba(255, 255, 255, 0.5));
+  border: 1px solid var(--accent-color);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-advice-box::before {
+  content: '🤖 AI ARCHITECT';
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--accent-color);
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.ai-loading {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent-color);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 .loading {
   display: flex;
   flex-direction: column;

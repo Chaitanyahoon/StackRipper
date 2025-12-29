@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const techCountEl = document.getElementById('tech-count');
     const tabUrlEl = document.getElementById('tab-url');
     const exportBtn = document.getElementById('export-json');
+    const aiConsultBtn = document.getElementById('ai-consultor');
+
+    // API CONFIGURATION
+    const GEMINI_API_KEY = "AIzaSyC5qvhkt0ro9XJuiDCedg0ea2Owqc1kqTk";
+    const GEMINI_MODEL = "gemini-1.5-flash"; // Fast and efficient
 
     let rulesData = [];
     let currentData = null;
@@ -61,6 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             `<span class="performance-pill" title="TTFB (Time to First Byte)">TTFB: ${metrics.responseTime}ms</span>` : '';
 
         profileDiv.innerHTML = `
+            <div id="ai-advice-container"></div>
             <div class="profile-label">
                 SITE IDENTITY PROFILE
                 ${perfHtml}
@@ -133,6 +139,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
         techCountEl.textContent = '0';
     }
+
+    // --- AI LOGIC ---
+    aiConsultBtn.addEventListener('click', async () => {
+        if (!currentData || !currentData.detections.length) return;
+
+        const adviceContainer = document.getElementById('ai-advice-container');
+        if (!adviceContainer) return;
+
+        adviceContainer.innerHTML = `<div class="ai-advice-box"><span class="ai-loading"></span>Analysing stack architecture...</div>`;
+
+        const techList = currentData.detections.map(d => d.name).sort().join(', ');
+        const cacheKey = `ai_review_${techList}`;
+
+        // 1. Check Cache
+        chrome.storage.local.get(cacheKey, async (result) => {
+            if (result[cacheKey]) {
+                adviceContainer.innerHTML = `<div class="ai-advice-box">${result[cacheKey]}</div>`;
+                return;
+            }
+
+            // 2. Call API
+            try {
+                const prompt = `You are a Senior Tech Architect. Analyze this tech stack: [${techList}]. Provide a 2-sentence professional critique on performance, security, or modern best practices. Be concise and insightful.`;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const advice = data.candidates?.[0]?.content?.parts?.[0]?.text || "Architecture looks solid.";
+
+                // 3. Cache Result
+                const cacheData = {};
+                cacheData[cacheKey] = advice;
+                chrome.storage.local.set(cacheData);
+
+                adviceContainer.innerHTML = `<div class="ai-advice-box">${advice}</div>`;
+            } catch (err) {
+                adviceContainer.innerHTML = `<div class="ai-advice-box" style="color:red;">AI Analysis Failed: ${err.message}</div>`;
+            }
+        });
+    });
+
 
     // Export Logic
     exportBtn.addEventListener('click', () => {
