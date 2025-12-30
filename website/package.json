@@ -1,14 +1,15 @@
 {
-  "name": "stackripper-website",
+  "name": "website",
+  "version": "0.1.0",
   "private": true,
-  "version": "3.0.3",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
-  "devDependencies": {
-    "vite": "^5.0.8"
+  "dependencies": {
+    "next": "16.1.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   }
 }
