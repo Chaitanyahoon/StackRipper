@@ -31,30 +31,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyze-btn');
     const architectResult = document.getElementById('architect-result');
 
-    analyzeBtn.addEventListener('click', () => {
-        analyzeBtn.innerText = "Analyzing...";
-        analyzeBtn.disabled = true;
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', () => {
+            analyzeBtn.innerText = "Analyzing...";
+            analyzeBtn.disabled = true;
 
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            chrome.runtime.sendMessage({ type: 'GET_CRITIQUE', tabId: tabs[0].id }, (response) => {
-                setTimeout(() => {
-                    analyzeBtn.innerText = "Analyze Stack";
-                    analyzeBtn.disabled = false;
-                    architectResult.classList.remove('hidden');
-                    architectResult.innerHTML = `<p>${response.critique}</p>`;
-                }, 800);
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.runtime.sendMessage({ type: 'GET_CRITIQUE', tabId: tabs[0].id }, (response) => {
+                    setTimeout(() => {
+                        analyzeBtn.innerText = "Analyze Stack";
+                        analyzeBtn.disabled = false;
+                        architectResult.classList.remove('hidden');
+                        architectResult.innerHTML = `<p>${response.critique}</p>`;
+                    }, 800);
+                });
             });
         });
-    });
+    }
 
     function resetArchitect() {
-        architectResult.classList.add('hidden');
+        if (architectResult) architectResult.classList.add('hidden');
     }
 
     // 4. Time Machine Logic (History)
     function loadHistory() {
         const historyList = document.getElementById('history-list');
-        historyList.innerHTML = '<div class="spinner small"></div>'; // Loading state
+        historyList.innerHTML = '<div class="spinner small"></div>';
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             try {
@@ -94,18 +96,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Export Logic
-    document.getElementById('export-btn').addEventListener('click', () => {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            chrome.runtime.sendMessage({ type: 'GET_DETECTIONS', tabId: tabs[0].id }, (data) => {
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                chrome.downloads.download({
-                    url: url,
-                    filename: 'stack_report.json'
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.runtime.sendMessage({ type: 'GET_DETECTIONS', tabId: tabs[0].id }, (data) => {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    chrome.downloads.download({
+                        url: url,
+                        filename: 'stack_report.json'
+                    });
                 });
             });
         });
-    });
+    }
+
+    // Inspector Logic
+    const inspectorBtn = document.getElementById('inspector-btn');
+    if (inspectorBtn) {
+        inspectorBtn.addEventListener('click', () => {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, { type: 'TOGGLE_INSPECTOR' });
+                window.close(); // Close popup so user can use inspector
+            });
+        });
+    }
 });
 
 function renderScanner(data, container) {
@@ -114,7 +130,16 @@ function renderScanner(data, container) {
         return;
     }
 
-    container.innerHTML = ''; // Clear loading
+    container.innerHTML = '';
+
+    // Check for any vulnerabilities to show main banner
+    const allVulns = data.detections.filter(d => d.vulnerabilities && d.vulnerabilities.length > 0);
+    if (allVulns.length > 0) {
+        const banner = document.createElement('div');
+        banner.className = 'security-banner';
+        banner.innerHTML = `<span>🛡️ ${allVulns.length} Security Issue${allVulns.length > 1 ? 's' : ''} Found</span>`;
+        container.appendChild(banner);
+    }
 
     // Group by category
     const cats = {};
@@ -130,28 +155,29 @@ function renderScanner(data, container) {
 
         cats[cat].forEach(tech => {
             const version = data.versions && data.versions[tech.name];
+            const vulns = tech.vulnerabilities;
+            const isRisky = vulns && vulns.length > 0;
+
             const item = document.createElement('div');
             item.className = 'tech-row';
+
+            let badgesIdx = '';
+            if (isRisky) {
+                badgesIdx += `<span class="vuln-badge" title="${vulns[0].cve}: ${vulns[0].desc}">⚠️ ${vulns[0].severity}</span>`;
+            }
+
             item.innerHTML = `
                 <div class="tech-info">
-                    <span class="tech-name">${tech.name}</span>
+                    <span class="tech-name ${isRisky ? 'text-red' : ''}">${tech.name}</span>
                     <span class="tech-method">${tech.method}</span>
                 </div>
-                ${version ? `<span class="tech-version">v${version}</span>` : ''}
+                <div class="tech-meta">
+                    ${badgesIdx}
+                    ${version ? `<span class="tech-version ${isRisky ? 'bg-red' : ''}">v${version}</span>` : ''}
+                </div>
             `;
             group.appendChild(item);
         });
         container.appendChild(group);
     });
 }
-
-    // Inspector Logic
-    const inspectorBtn = document.getElementById('inspector-btn');
-    if (inspectorBtn) {
-        inspectorBtn.addEventListener('click', () => {
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, { type: 'TOGGLE_INSPECTOR' });
-                window.close(); // Close popup so user can use inspector
-            });
-        });
-    }

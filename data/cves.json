@@ -1,0 +1,70 @@
+{
+    "cves": {
+        "React": [
+            {
+                "min": "0.0.0",
+                "max": "16.8.6",
+                "severity": "High",
+                "cve": "CVE-2019-1135",
+                "desc": "XSS vulnerability in older React versions via 'javascript:' URLs."
+            },
+            {
+                "min": "16.0.0",
+                "max": "16.4.2",
+                "severity": "Medium",
+                "cve": "CVE-2018-0001",
+                "desc": "Potential XSS bypass in certain attributes."
+            }
+        ],
+        "jQuery": [
+            {
+                "min": "0.0.0",
+                "max": "3.4.1",
+                "severity": "Medium",
+                "cve": "CVE-2019-11358",
+                "desc": "Prototype pollution vulnerability in $.extend."
+            },
+            {
+                "min": "0.0.0",
+                "max": "2.2.4",
+                "severity": "High",
+                "cve": "CVE-2015-9251",
+                "desc": "XSS vulnerability in parseHTML."
+            }
+        ],
+        "Bootstrap": [
+            {
+                "min": "3.0.0",
+                "max": "3.4.0",
+                "severity": "Medium",
+                "cve": "CVE-2019-8331",
+                "desc": "XSS in tooltip/popover plugins."
+            },
+            {
+                "min": "4.0.0",
+                "max": "4.1.1",
+                "severity": "Medium",
+                "cve": "CVE-2018-14041",
+                "desc": "XSS in data-target attribute."
+            }
+        ],
+        "Lodash": [
+            {
+                "min": "0.0.0",
+                "max": "4.17.10",
+                "severity": "Critical",
+                "cve": "CVE-2018-16487",
+                "desc": "Prototype pollution via merge, update, and defaultsDeep."
+            }
+        ],
+        "AngularJS": [
+            {
+                "min": "1.0.0",
+                "max": "1.7.9",
+                "severity": "High",
+                "cve": "CVE-2020-7676",
+                "desc": "XSS via dangerous attributes in templates."
+            }
+        ]
+    }
+}
