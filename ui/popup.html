@@ -27,6 +27,13 @@
           <p>Gathering fragments...</p>
         </div>
       </div>
+      <div id="history-view" class="hidden-view">
+        <div class="view-header">
+          <button id="close-history" class="back-btn">← Back</button>
+          <h3>Time Machine</h3>
+        </div>
+        <div id="history-list"></div>
+      </div>
     </main>
 
     <footer>
@@ -34,8 +41,9 @@
         <span id="tech-count" style="color: var(--accent-light); font-size: 0.8rem;">0</span> TECHS DETECTED
       </div>
       <div class="actions">
+        <button id="time-machine" class="icon-btn" title="View Stack History">🕒</button>
         <button id="ai-consultor" class="icon-btn" title="Consult AI Architect">🧠</button>
-        <button id="export-json" class="export-btn">EXPORT REPORT</button>
+        <button id="export-json" class="export-btn">EXPORT</button>
       </div>
     </footer>
   </div>

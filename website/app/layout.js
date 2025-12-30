@@ -1,3 +1,5 @@
+import "./globals.css";
+
 export const metadata = {
   title: "StackRipper | The Intelligence Layer for Developers",
   description: "A premium technology profiler and architecture consultant for professional developers.",
@@ -14,7 +16,7 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="icon" type="image/png" href="/logo.png" />
       </head>
-      <body>{children}</body>
+      <body suppressHydrationWarning={true}>{children}</body>
     </html>
   );
 }

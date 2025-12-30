@@ -24,11 +24,27 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   chrome.storage.local.remove(tabId.toString());
 });
 
+// Context Menu Setup
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "inspect-stack",
+    title: "Inspect Component with StackRipper",
+    contexts: ["all"]
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "inspect-stack") {
+    chrome.tabs.sendMessage(tab.id, { type: "INSPECT_ELEMENT" });
+  }
+});
+
 // Reset detections ONLY on new page navigation
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'loading' && changeInfo.url) {
+  if (changeInfo.status === 'loading' && (changeInfo.url || tab.url)) {
+    const url = changeInfo.url || tab.url;
     detectedTechs[tabId] = {
-      url: changeInfo.url,
+      url: url,
       detections: [],
       versions: {},
       metrics: {}
@@ -102,7 +118,36 @@ function addDetection(tabId, tech, method = 'Unknown') {
 
     chrome.storage.local.set({ [tabId]: detectedTechs[tabId] });
     updateBadge(tabId);
+
+    // Save to History (Debounced or on complete)
+    if (detectedTechs[tabId].url) {
+      saveHistory(detectedTechs[tabId].url, detectedTechs[tabId].detections);
+    }
   }
+}
+
+async function saveHistory(url, detections) {
+  try {
+    const hostname = new URL(url).hostname;
+    const key = `history_${hostname}`;
+    const result = await chrome.storage.local.get(key);
+    const history = result[key] || [];
+
+    const currentStack = detections.map(d => d.name).sort().join(',');
+    const lastEntry = history[history.length - 1];
+
+    if (!lastEntry || lastEntry.stack !== currentStack) {
+      history.push({
+        timestamp: new Date().toISOString(),
+        stack: currentStack,
+        detections: detections
+      });
+      // Keep last 10 changes
+      const trimmedHistory = history.slice(-10);
+      await chrome.storage.local.set({ [key]: trimmedHistory });
+      console.log(`StackRipper: History updated for ${hostname}`);
+    }
+  } catch (e) { }
 }
 
 // Handle messages
@@ -141,5 +186,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
       return true;
     }
+  }
+
+  if (message.type === 'GET_HISTORY') {
+    const hostname = message.hostname;
+    chrome.storage.local.get(`history_${hostname}`, (result) => {
+      sendResponse(result[`history_${hostname}`] || []);
+    });
+    return true;
   }
 });

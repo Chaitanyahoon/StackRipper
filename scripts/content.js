@@ -118,6 +118,56 @@ function capturePerformance() {
     }
 }
 
+// Component Inspector Logic
+let lastRightClickedElement = null;
+
+document.addEventListener('contextmenu', (e) => {
+    lastRightClickedElement = e.target;
+}, true);
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'INSPECT_ELEMENT') {
+        const el = lastRightClickedElement;
+        if (!el) return;
+
+        // Visual Feedback: Highlight
+        const originalTransition = el.style.transition;
+        const originalOutline = el.style.outline;
+        el.style.transition = 'outline 0.3s ease';
+        el.style.outline = '4px solid #ffb7b2';
+
+        // Analyze element
+        const info = analyzeElement(el);
+
+        setTimeout(() => {
+            el.style.outline = originalOutline;
+            el.style.transition = originalTransition;
+            alert(`StackRipper Component Inspector:\n\nDetected: ${info.name}\nType: ${info.type}\nRole: ${info.role}`);
+        }, 800);
+    }
+});
+
+function analyzeElement(el) {
+    const tagName = el.tagName.toLowerCase();
+    const classes = el.className || '';
+    const id = el.id || '';
+    const html = el.outerHTML;
+
+    // Basic heuristics for component identification
+    if (tagName.startsWith('ion-')) return { name: 'Ionic UI', type: 'Web Component', role: 'UI Framework' };
+    if (classes.includes('css-') && tagName === 'div') return { name: 'Emotion/Styled-Components', type: 'CSS-in-JS', role: 'Styling' };
+    if (classes.includes('Mui')) return { name: 'Material UI', type: 'React Library', role: 'Framework Components' };
+    if (classes.includes('tw-') || classes.includes('tailwind')) return { name: 'Tailwind CSS', type: 'Utility Class', role: 'Layout' };
+    if (html.includes('data-v-')) return { name: 'Vue Component', type: 'Scoped Component', role: 'Stateful UI' };
+    if (html.includes('data-react')) return { name: 'React Component', type: 'Client Component', role: 'Interactive UI' };
+
+    return {
+        name: tagName.toUpperCase(),
+        type: 'Native HTML',
+        role: 'Structure'
+    };
+}
+
 // Initial Scan & Injection
 scan();
 injectVersionDetector();
