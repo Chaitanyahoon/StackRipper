@@ -9,7 +9,7 @@
   --shadow-sm: 0 4px 20px rgba(255, 183, 178, 0.1);
   --shadow-md: 0 10px 40px rgba(255, 183, 178, 0.15);
   --shadow-lg: 0 20px 60px rgba(255, 183, 178, 0.2);
-  --font-main: ''Outfit'', sans-serif;
+  --font-main: 'Outfit', sans-serif;
   --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
