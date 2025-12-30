@@ -6,47 +6,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StackRipper</title>
   <link rel="stylesheet" href="popup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <div class="container">
-    <header>
-      <div class="logo-wrapper">
-        <img src="../assets/icon48.png" alt="StackRipper Logo" class="header-logo">
-        <div class="logo">StackRipper</div>
+  <header class="glass-header">
+    <div class="logo-area">
+      <img src="../assets/icon128.png" alt="Logo" class="logo-img">
+      <div class="brand">
+        <h1>StackRipper</h1>
+        <span class="version-badge">v3.0</span>
       </div>
-      <div class="status-bar">
-        <span id="tab-url">visiting...</span>
-      </div>
-    </header>
+    </div>
 
-    <main id="main-content">
-      <div id="results-container">
-        <div class="loading">
-          <div class="loader-orbit"></div>
-          <p>Gathering fragments...</p>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="scanner">Scanner</button>
+      <button class="tab-btn" data-tab="architect">Architect 🧠</button>
+      <button class="tab-btn" data-tab="history">History ⏳</button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- Scanner View -->
+    <div id="scanner-view" class="tab-content active">
+      <div id="results">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Analyzing stack...</p>
         </div>
       </div>
-      <div id="history-view" class="hidden-view">
-        <div class="view-header">
-          <button id="close-history" class="back-btn">← Back</button>
-          <h3>Time Machine</h3>
-        </div>
-        <div id="history-list"></div>
+      <div class="action-bar">
+        <button id="inspector-btn" class="secondary-btn">🩻 Inspect</button>
+        <button id="export-btn" class="secondary-btn">Export JSON</button>
       </div>
-    </main>
+    </div>
 
-    <footer>
-      <div class="stats">
-        <span id="tech-count" style="color: var(--accent-light); font-size: 0.8rem;">0</span> TECHS DETECTED
+    <!-- Architect View -->
+    <div id="architect-view" class="tab-content">
+      <div class="architect-card">
+        <div class="ai-avatar-large">🧠</div>
+        <h3>Stack Architect</h3>
+        <p class="ai-desc">I analyze your stack for conflicts, SEO issues, and legacy code patterns using local
+          heuristics.</p>
+        <button id="analyze-btn" class="primary-btn pulse">Analyze Stack</button>
+        <div id="architect-result" class="architect-output hidden"></div>
       </div>
-      <div class="actions">
-        <button id="time-machine" class="icon-btn" title="View Stack History">🕒</button>
-        <button id="ai-consultor" class="icon-btn" title="Consult AI Architect">🧠</button>
-        <button id="export-json" class="export-btn">EXPORT</button>
+    </div>
+
+    <!-- History View -->
+    <div id="history-view" class="tab-content">
+      <div class="history-header">
+        <h3>Time Machine</h3>
+        <p>Track stack changes over time.</p>
       </div>
-    </footer>
-  </div>
+      <ul id="history-list" class="history-list">
+        <!-- History Items Injected Here -->
+      </ul>
+    </div>
+  </main>
+
+  <footer>
+    <a href="#" id="open-dashboard">Dashboard</a>
+    <a href="https://github.com/Chaitanyahoon/StackRipper" target="_blank">GitHub</a>
+  </footer>
+
   <script src="popup.js"></script>
 </body>
 

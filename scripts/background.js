@@ -145,54 +145,149 @@ async function saveHistory(url, detections) {
       // Keep last 10 changes
       const trimmedHistory = history.slice(-10);
       await chrome.storage.local.set({ [key]: trimmedHistory });
-      console.log(`StackRipper: History updated for ${hostname}`);
     }
-  } catch (e) { }
-}
+  }
 
-// Handle messages
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'DETECTIONS' && sender.tab) {
-    const tabId = sender.tab.id;
-    message.detections.forEach(d => {
-      const tech = rules.find(t => t.name === d.name);
-      if (tech) {
-        addDetection(tabId, tech, d.method);
+// StackRipper Background Script
+
+// 1. Time Machine: Save Detections
+function saveHistory(url, detections) {
+    try {
+      const hostname = new URL(url).hostname;
+      const timestamp = new Date().toISOString();
+
+      chrome.storage.local.get([hostname], (result) => {
+        const history = result[hostname] || [];
+
+        // Avoid duplicate contiguous entries (if nothing changed)
+        const lastEntry = history[history.length - 1];
+        const currentSignature = JSON.stringify(detections.sort((a, b) => a.name.localeCompare(b.name)));
+        const lastSignature = lastEntry ? JSON.stringify(lastEntry.detections.sort((a, b) => a.name.localeCompare(b.name))) : null;
+
+        if (currentSignature !== lastSignature) {
+          history.push({ timestamp, detections });
+          // Keep last 10 entries max
+          if (history.length > 10) history.shift();
+
+          chrome.storage.local.set({ [hostname]: history });
+        }
+      });
+    } catch (e) {
+      console.error("StackRipper: History save failed", e);
+    }
+  }
+
+  // Handle messages
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'DETECTIONS' && sender.tab) {
+      const tabId = sender.tab.id;
+      const tabUrl = sender.tab.url;
+
+      // Save to Time Machine
+      if (tabUrl && !tabUrl.startsWith('chrome://')) {
+        saveHistory(tabUrl, message.detections);
       }
-    });
-  }
 
-  if (message.type === 'VERSIONS_UPDATE' && sender.tab) {
-    const tabId = sender.tab.id;
-    if (!detectedTechs[tabId]) detectedTechs[tabId] = { detections: [], versions: {}, metrics: {} };
-    detectedTechs[tabId].versions = { ...detectedTechs[tabId].versions, ...message.versions };
-    chrome.storage.local.set({ [tabId]: detectedTechs[tabId] });
-  }
+      // Update Badge
+      const count = message.detections.length;
+      if (count > 0) {
+        chrome.action.setBadgeText({ text: count.toString(), tabId: tabId });
+        chrome.action.setBadgeBackgroundColor({ color: '#ffb7b2', tabId: tabId });
+      }
 
-  if (message.type === 'PERFORMANCE_METRICS' && sender.tab) {
-    const tabId = sender.tab.id;
-    if (!detectedTechs[tabId]) detectedTechs[tabId] = { detections: [], versions: {}, metrics: {} };
-    detectedTechs[tabId].metrics = message.metrics;
-    chrome.storage.local.set({ [tabId]: detectedTechs[tabId] });
-  }
+      message.detections.forEach(d => {
+        const tech = rules.find(t => t.name === d.name);
+        if (tech) {
+          addDetection(tabId, tech, d.method);
+        }
+      });
+    }
 
-  if (message.type === 'GET_DETECTIONS') {
-    const tabId = message.tabId;
-    if (detectedTechs[tabId]) {
-      sendResponse(detectedTechs[tabId]);
-    } else {
-      chrome.storage.local.get(tabId.toString(), (result) => {
-        sendResponse(result[tabId] || { detections: [], versions: {}, metrics: {} });
+    if (message.type === 'VERSIONS_UPDATE' && sender.tab) {
+      const tabId = sender.tab.id;
+      if (!detectedTechs[tabId]) detectedTechs[tabId] = { detections: [], versions: {}, metrics: {} };
+      detectedTechs[tabId].versions = { ...detectedTechs[tabId].versions, ...message.versions };
+      chrome.storage.local.set({ [tabId]: detectedTechs[tabId] });
+    }
+
+    if (message.type === 'PERFORMANCE_METRICS' && sender.tab) {
+      const tabId = sender.tab.id;
+      if (!detectedTechs[tabId]) detectedTechs[tabId] = { detections: [], versions: {}, metrics: {} };
+      detectedTechs[tabId].metrics = message.metrics;
+      chrome.storage.local.set({ [tabId]: detectedTechs[tabId] });
+    }
+
+    if (message.type === 'GET_DETECTIONS') {
+      const tabId = message.tabId;
+      if (detectedTechs[tabId]) {
+        sendResponse(detectedTechs[tabId]);
+      } else {
+        chrome.storage.local.get(tabId.toString(), (result) => {
+          sendResponse(result[tabId] || { detections: [], versions: {}, metrics: {} });
+        });
+        return true;
+      }
+    }
+
+    if (message.type === 'GET_HISTORY') {
+      const hostname = message.hostname;
+      chrome.storage.local.get(`history_${hostname}`, (result) => {
+        sendResponse(result[`history_${hostname}`] || []);
       });
       return true;
     }
+  });
+
+// 2. AI Architect: Local Heuristic Engine
+function generateCritique(detections) {
+  const techs = detections.map(d => d.name.toLowerCase());
+  const versionMap = {};
+  detections.forEach(d => { if(d.version) versionMap[d.name.toLowerCase()] = d.version; });
+
+  let critique = "Analysis complete. ";
+  let issues = [];
+
+  // Rule 1: Mix of UI Libraries
+  if (techs.includes('react') && techs.includes('jquery')) {
+    issues.push("Mixing Virtual DOM (React) with direct DOM manipulation (jQuery) can lead to performance bottlenecks and header trashing.");
+  }
+  if (techs.includes('angular') && techs.includes('react')) {
+    issues.push("Detected two heavy frontend frameworks (Angular + React). This significantly increases bundle size. Consider standardizing on one.");
   }
 
-  if (message.type === 'GET_HISTORY') {
-    const hostname = message.hostname;
-    chrome.storage.local.get(`history_${hostname}`, (result) => {
-      sendResponse(result[`history_${hostname}`] || []);
-    });
-    return true;
+  // Rule 2: SEO Check
+  if (techs.includes('next.js') || techs.includes('gatsby') || techs.includes('nuxt.js')) {
+    issues.push("Excellent architecture for SEO. Server-side rendering detected.");
+  } else if (techs.includes('react') && !techs.includes('next.js')) {
+    issues.push("Client-side React detected without Next.js. Verify SEO performance using Google Search Console as content may not be fully indexed.");
   }
+
+  // Rule 3: Security / Legacy
+  if (techs.includes('bootstrap') && !techs.includes('bootstrap 5')) {
+     if (versionMap['bootstrap'] && versionMap['bootstrap'].startsWith('3')) {
+        issues.push("Legacy Bootstrap 3 detected. This version is end-of-life and lacks modern flexbox utilities.");
+     }
+  }
+
+  if (issues.length === 0) {
+    critique += "The stack appears consistent. No major architectural conflicts detected.";
+  } else {
+    critique += issues.join(" ");
+  }
+
+  return critique;
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'GET_CRITIQUE') {
+       const tabId = message.tabId;
+       const data = detectedTechs[tabId];
+       if (data && data.detections) {
+           const text = generateCritique(data.detections);
+           sendResponse({ critique: text });
+       } else {
+           sendResponse({ critique: "No stack data available to analyze yet." });
+       }
+       return true; 
+    }
 });

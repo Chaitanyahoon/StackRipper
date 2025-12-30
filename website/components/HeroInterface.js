@@ -1,10 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function HeroInterface() {
     const [isScanning, setIsScanning] = useState(false);
     const [scanState, setScanState] = useState('idle'); // idle, scanning, result
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const startScan = () => {
         if (scanState === 'scanning') return;
@@ -18,6 +23,9 @@ export default function HeroInterface() {
             setIsScanning(false);
         }, 2000);
     };
+
+    // Hydration Fix: Prevent mismatch by only rendering on client
+    if (!mounted) return <div className="interface-placeholder" style={{ height: '400px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }} />;
 
     return (
         <div className="interface-wrapper" onClick={startScan}>
@@ -101,7 +109,7 @@ function StackItem({ name, type, version, color, warning }) {
         <div className={`stack-item ${warning ? 'warning-item' : ''}`}>
             <div className="stack-info-group">
                 <div className="stack-info">
-                    <span className="stack-name" style={{ color: color === '#aaa' ? 'var(--text-dark)' : color }}>{name}</span>
+                    <span className="stack-name" style={{ color: color === '#aaa' ? 'var(--text-main)' : color }}>{name}</span>
                     <span className="stack-type">{type}</span>
                 </div>
             </div>

@@ -1,229 +1,157 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const resultsContainer = document.getElementById('results-container');
-    const techCountEl = document.getElementById('tech-count');
-    const tabUrlEl = document.getElementById('tab-url');
-    const exportBtn = document.getElementById('export-json');
-    const aiConsultBtn = document.getElementById('ai-consultor');
-    const timeMachineBtn = document.getElementById('time-machine');
-    const historyView = document.getElementById('history-view');
-    const closeHistoryBtn = document.getElementById('close-history');
-    const historyList = document.getElementById('history-list');
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Tab Switching Logic
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
 
-    let rulesData = [];
-    let currentData = null;
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabs.forEach(b => b.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
 
-    const VULNERABILITIES = {
-        'React': [
-            { min: '0.0.0', max: '16.14.0', level: 'High', msg: 'Potential XSS in older React versions. Upgrade to v17+ recommended.' }
-        ],
-        'jQuery': [
-            { min: '0.0.0', max: '3.5.0', level: 'Medium', msg: 'Multiple CVEs found in older jQuery. Upgrade to 3.5.1+.' }
-        ],
-        'Angular': [
-            { min: '0.0.0', max: '10.0.0', level: 'High', msg: 'Legacy Angular versions are no longer receiving security patches.' }
-        ],
-        'Vue.js': [
-            { min: '0.0.0', max: '2.6.0', level: 'Medium', msg: 'Vue 2.x is reaching End of Life. Migration to Vue 3 is advised.' }
-        ]
-    };
+            btn.classList.add('active');
+            const target = btn.getAttribute('data-tab');
+            document.getElementById(`${target}-view`).classList.add('active');
 
-    // Load rules metadata
-    try {
-        const response = await fetch(chrome.runtime.getURL('data/rules.json'));
-        const data = await response.json();
-        rulesData = data.technologies;
-    } catch (e) {
-        rulesData = [];
-    }
+            if (target === 'history') loadHistory();
+            if (target === 'architect') resetArchitect();
+        });
+    });
 
-    // Get active tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab) return;
-
-    const hostname = tab.url ? new URL(tab.url).hostname : 'unknown domain';
-    tabUrlEl.textContent = hostname;
-
-    // Fetch detections
-    chrome.runtime.sendMessage({ type: 'GET_DETECTIONS', tabId: tab.id }, (response) => {
-        if (!response || !response.detections || response.detections.length === 0) {
-            renderEmptyState();
-        } else {
-            currentData = response;
-            renderDetections(response);
+    // 2. Initial Scanner Load
+    const resultsContainer = document.getElementById('results');
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+            chrome.runtime.sendMessage({ type: 'GET_DETECTIONS', tabId: tabs[0].id }, (response) => {
+                renderScanner(response, resultsContainer);
+            });
         }
     });
 
-    function renderDetections(data) {
-        const { detections, versions, metrics } = data;
-        resultsContainer.innerHTML = '';
-        techCountEl.textContent = detections.length;
+    // 3. Architect Logic (Local AI)
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const architectResult = document.getElementById('architect-result');
 
-        // Security Audit Check
-        const totalVulns = [];
-        detections.forEach(tech => {
-            const version = versions ? versions[tech.name] : null;
-            if (version && VULNERABILITIES[tech.name]) {
-                VULNERABILITIES[tech.name].forEach(v => {
-                    if (compareVersions(version, v.max) <= 0) {
-                        totalVulns.push({ name: tech.name, ...v });
-                    }
-                });
-            }
-        });
+    analyzeBtn.addEventListener('click', () => {
+        analyzeBtn.innerText = "Analyzing...";
+        analyzeBtn.disabled = true;
 
-        if (totalVulns.length > 0) {
-            const alert = document.createElement('div');
-            alert.className = 'security-alert';
-            alert.innerHTML = `⚠️ ${totalVulns.length} Security Risks Detected in this stack. Check marked components.`;
-            resultsContainer.appendChild(alert);
-        }
-
-        // Site Profile
-        const profile = generateProfile(detections);
-        const profileDiv = document.createElement('div');
-        profileDiv.className = 'site-profile';
-        const perfHtml = metrics && metrics.responseTime ? `<span class="performance-pill">TTFB: ${metrics.responseTime}ms</span>` : '';
-        profileDiv.innerHTML = `
-            <div id="ai-advice-container"></div>
-            <div class="profile-label">SITE IDENTITY PROFILE ${perfHtml}</div>
-            <div class="profile-summary">${profile}</div>
-        `;
-        resultsContainer.appendChild(profileDiv);
-
-        // Group by category
-        const categories = {};
-        detections.forEach(tech => {
-            if (!categories[tech.category]) categories[tech.category] = [];
-            categories[tech.category].push(tech);
-        });
-
-        Object.keys(categories).sort().forEach(category => {
-            const group = document.createElement('div');
-            group.className = 'category-group';
-            const title = document.createElement('div');
-            title.className = 'category-title';
-            title.textContent = category;
-            group.appendChild(title);
-
-            const list = document.createElement('div');
-            list.className = 'tech-list';
-
-            categories[category].forEach(tech => {
-                const techMeta = rulesData.find(r => r.name === tech.name) || {};
-                const version = versions ? versions[tech.name] : null;
-                const vuln = totalVulns.find(v => v.name === tech.name);
-
-                const card = document.createElement('div');
-                card.className = 'tech-card';
-                card.innerHTML = `
-                    <div class="tech-name-row">
-                        <div class="tech-name">${tech.name} ${vuln ? `<span class="vuln-badge" title="${vuln.msg}">RISK: ${vuln.level}</span>` : ''}</div>
-                        ${version ? `<div class="tech-version">v${version}</div>` : ''}
-                    </div>
-                    <div class="tech-desc">${techMeta.description || 'Enterprise technology detected.'}</div>
-                    <div class="tech-meta-row">
-                        <div class="tech-method">Via ${tech.method || 'Unknown'}</div>
-                        ${techMeta.website ? `<a href="${techMeta.website}" target="_blank" class="tech-docs">Documentation</a>` : ''}
-                    </div>
-                `;
-                list.appendChild(card);
-            });
-            group.appendChild(list);
-            resultsContainer.appendChild(group);
-        });
-    }
-
-    function compareVersions(v1, v2) {
-        const parts1 = v1.split('.').map(Number);
-        const parts2 = v2.split('.').map(Number);
-        for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-            const p1 = parts1[i] || 0;
-            const p2 = parts2[i] || 0;
-            if (p1 > p2) return 1;
-            if (p1 < p2) return -1;
-        }
-        return 0;
-    }
-
-    function generateProfile(detections) {
-        const names = detections.map(d => d.name);
-        if (names.includes('Flipkart Stack')) return "Comprehensive e-commerce ecosystem. Optimized for high-concurrency and deep user engagement with a modular React infrastructure.";
-        if (names.includes('Next.js')) return "Modern full-stack React implementation. Leverages edge computing and server-side generation for elite performance and technical SEO.";
-        if (names.includes('React')) return "Dynamic frontend architecture. Built on component-driven principles for a reactive and fast user experience.";
-        return "Specialized professional stack detected. System is architected for scalability using industry-standard enterprise frameworks.";
-    }
-
-    function renderEmptyState(customMsg) {
-        resultsContainer.innerHTML = `<div class="loading" style="animation: none;"><p style="color: var(--text-secondary); font-weight: 500;">${customMsg || 'No technologies detected'}</p></div>`;
-    }
-
-    // --- TIME MACHINE LOGIC ---
-    timeMachineBtn.addEventListener('click', () => {
-        historyView.classList.add('active');
-        historyList.innerHTML = '<div class="loading"><span class="ai-loading"></span>Rewinding time...</div>';
-
-        chrome.runtime.sendMessage({ type: 'GET_HISTORY', hostname }, (history) => {
-            historyList.innerHTML = '';
-            if (!history || history.length === 0) {
-                historyList.innerHTML = '<p style="text-align:center; padding:20px; opacity:0.6;">No previous stack changes recorded for this domain.</p>';
-                return;
-            }
-
-            history.reverse().forEach(entry => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                const date = new Date(entry.timestamp).toLocaleString();
-                item.innerHTML = `
-                    <div class="history-date">${date}</div>
-                    <div class="history-stack">${entry.stack.split(',').join(' • ')}</div>
-                `;
-                historyList.appendChild(item);
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.runtime.sendMessage({ type: 'GET_CRITIQUE', tabId: tabs[0].id }, (response) => {
+                setTimeout(() => {
+                    analyzeBtn.innerText = "Analyze Stack";
+                    analyzeBtn.disabled = false;
+                    architectResult.classList.remove('hidden');
+                    architectResult.innerHTML = `<p>${response.critique}</p>`;
+                }, 800);
             });
         });
     });
 
-    closeHistoryBtn.addEventListener('click', () => {
-        historyView.classList.remove('active');
-    });
+    function resetArchitect() {
+        architectResult.classList.add('hidden');
+    }
 
-    // --- AI LOGIC (PRODUCTION READY) ---
-    aiConsultBtn.addEventListener('click', async () => {
-        if (!currentData || !currentData.detections.length) return;
-        const adviceContainer = document.getElementById('ai-advice-container');
-        if (!adviceContainer) return;
+    // 4. Time Machine Logic (History)
+    function loadHistory() {
+        const historyList = document.getElementById('history-list');
+        historyList.innerHTML = '<div class="spinner small"></div>'; // Loading state
 
-        chrome.storage.local.get(['gemini_api_key'], async (settings) => {
-            const apiKey = settings.gemini_api_key;
-            if (!apiKey) {
-                adviceContainer.innerHTML = `<div class="ai-advice-box"><p>Set Gemini API Key in settings to use Consultant.</p></div>`;
-                return;
-            }
-            adviceContainer.innerHTML = `<div class="ai-advice-box"><span class="ai-loading"></span>Analysing architecture...</div>`;
-            const techList = currentData.detections.map(d => d.name).sort().join(', ');
-            const prompt = `Analyze this tech stack: [${techList}]. Provide a 2-sentence professional critique on performance or security.`;
-
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                const url = new URL(tabs[0].url);
+                const hostname = url.hostname;
+
+                chrome.runtime.sendMessage({ type: 'GET_HISTORY', hostname: hostname }, (history) => {
+                    historyList.innerHTML = '';
+
+                    if (!history || history.length === 0) {
+                        historyList.innerHTML = '<li class="empty-msg">No history found for this domain.</li>';
+                        return;
+                    }
+
+                    // Show newest first
+                    history.reverse().forEach(entry => {
+                        const date = new Date(entry.timestamp).toLocaleDateString() + ' ' + new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const techCount = entry.detections.length;
+                        const techNames = entry.detections.map(d => d.name).slice(0, 3).join(', ');
+
+                        const li = document.createElement('li');
+                        li.className = 'history-item';
+                        li.innerHTML = `
+                            <div class="history-left">
+                                <span class="history-date">${date}</span>
+                                <span class="history-summary">${techNames}${entry.detections.length > 3 ? '...' : ''}</span>
+                            </div>
+                            <span class="history-badge">${techCount}</span>
+                        `;
+                        historyList.appendChild(li);
+                    });
                 });
-                const data = await response.json();
-                const advice = data.candidates?.[0]?.content?.parts?.[0]?.text || "Stack looks optimal.";
-                adviceContainer.innerHTML = `<div class="ai-advice-box">${advice}</div>`;
-            } catch (err) {
-                adviceContainer.innerHTML = `<div class="ai-advice-box" style="color:red;">Scan Failed: ${err.message}</div>`;
+            } catch (e) {
+                historyList.innerHTML = '<li class="empty-msg">Cannot access history for this page.</li>';
             }
         });
-    });
+    }
 
     // Export Logic
-    exportBtn.addEventListener('click', () => {
-        if (!currentData) return;
-        const report = { hostname, timestamp: new Date().toISOString(), stack: currentData.detections, versions: currentData.versions };
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
-        const a = document.createElement('a');
-        a.href = dataStr;
-        a.download = `stackripper_${hostname.replace(/\./g, '_')}.json`;
-        a.click();
+    document.getElementById('export-btn').addEventListener('click', () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.runtime.sendMessage({ type: 'GET_DETECTIONS', tabId: tabs[0].id }, (data) => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                chrome.downloads.download({
+                    url: url,
+                    filename: 'stack_report.json'
+                });
+            });
+        });
     });
 });
+
+function renderScanner(data, container) {
+    if (!data || !data.detections || data.detections.length === 0) {
+        container.innerHTML = '<div class="empty-state">No technologies detected.</div>';
+        return;
+    }
+
+    container.innerHTML = ''; // Clear loading
+
+    // Group by category
+    const cats = {};
+    data.detections.forEach(d => {
+        if (!cats[d.category]) cats[d.category] = [];
+        cats[d.category].push(d);
+    });
+
+    Object.keys(cats).sort().forEach(cat => {
+        const group = document.createElement('div');
+        group.className = 'tech-group';
+        group.innerHTML = `<h3 class="cat-title">${cat}</h3>`;
+
+        cats[cat].forEach(tech => {
+            const version = data.versions && data.versions[tech.name];
+            const item = document.createElement('div');
+            item.className = 'tech-row';
+            item.innerHTML = `
+                <div class="tech-info">
+                    <span class="tech-name">${tech.name}</span>
+                    <span class="tech-method">${tech.method}</span>
+                </div>
+                ${version ? `<span class="tech-version">v${version}</span>` : ''}
+            `;
+            group.appendChild(item);
+        });
+        container.appendChild(group);
+    });
+}
+
+    // Inspector Logic
+    const inspectorBtn = document.getElementById('inspector-btn');
+    if (inspectorBtn) {
+        inspectorBtn.addEventListener('click', () => {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, { type: 'TOGGLE_INSPECTOR' });
+                window.close(); // Close popup so user can use inspector
+            });
+        });
+    }

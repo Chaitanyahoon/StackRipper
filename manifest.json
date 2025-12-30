@@ -25,7 +25,8 @@
                 "<all_urls>"
             ],
             "js": [
-                "scripts/content.js"
+                "scripts/content.js",
+                "scripts/inspector.js"
             ],
             "run_at": "document_idle"
         }

@@ -441,3 +441,114 @@ footer {
   font-weight: 600;
   line-height: 1.4;
 }
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: white;
+  color: #ffb7b2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.tab-content {
+  display: none;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Architect View */
+.architect-card {
+  text-align: center;
+  padding: 30px 20px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  margin-top: 10px;
+}
+
+.ai-avatar-large {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.ai-desc {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.architect-output {
+  margin-top: 20px;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 12px;
+  border-left: 3px solid #ffb7b2;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+/* History View */
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 15px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.history-date {
+  font-size: 0.75rem;
+  color: #999;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.history-summary {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.history-badge {
+  background: #fff0ef;
+  color: #ffb7b2;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
